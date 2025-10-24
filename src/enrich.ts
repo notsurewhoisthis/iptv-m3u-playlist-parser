@@ -1,5 +1,5 @@
-import { Playlist, TvgChannel, TvgProgramme } from './types.js';
-import { buildEpgBindingIndex, buildChannelCategoryMap, normalizeName } from './xmltv.js';
+import { Playlist } from './types.js';
+import { TvgChannel, TvgProgramme, buildEpgBindingIndex, buildChannelCategoryMap, normalizeName } from './xmltv.js';
 
 export interface EnrichOptions {
   topNCategories?: number; // default 3
