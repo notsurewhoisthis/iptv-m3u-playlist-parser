@@ -33,3 +33,19 @@ test('xtream helpers', () => {
   const m3uUrl = buildXtreamM3uUrl({ host: 'http://demo.example.com:80', username: 'u', password: 'p' }, { type: 'm3u', output: 'ts' });
   assert.ok(m3uUrl.includes('/get.php'));
 });
+
+test('alias normalization + playlist UA', () => {
+  const text = readFileSync(new URL('./aliases.m3u', import.meta.url), 'utf8');
+  const res = normalizePlaylist(parsePlaylist(text));
+  const ch = res.items[0];
+  // Aliases normalized
+  assert.equal(ch.tvg?.id, 'id.1');
+  assert.equal(ch.tvg?.name, 'Name 1');
+  assert.equal(ch.tvg?.logo, 'logo1.png');
+  assert.ok(ch.group?.includes('A'));
+  assert.ok(ch.group?.includes('B'));
+  // Playlist-level user-agent applied unless overridden
+  assert.equal(ch.http?.userAgent, 'UA-Header');
+  // EXTVLCOPT referrer captured
+  assert.equal(ch.http?.referer, 'https://ref.example/');
+});

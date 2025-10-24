@@ -1,0 +1,4 @@
+#EXTM3U user-agent="UA-Header"
+#EXTINF:-1 tvg_id="id.1" tvg_name='Name 1' tvg_logo=logo1.png group_title="A;B",Name 1
+#EXTVLCOPT:http-referrer=https://ref.example/
+http://example.com/1
