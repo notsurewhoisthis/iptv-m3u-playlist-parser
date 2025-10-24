@@ -24,12 +24,12 @@ Highlights
 
 Install
 ```
-npm i iptv-parser
+npm i iptv-m3u-parser
 ```
 
 Quick Start (Library)
 ```ts
-import { parsePlaylist } from 'iptv-parser';
+import { parsePlaylist } from 'iptv-m3u-parser';
 import { readFileSync } from 'node:fs';
 
 const text = readFileSync('playlist.m3u', 'utf8');
@@ -65,7 +65,7 @@ EPG Enrichment
 60‑second recipes
 - Load a remote playlist with custom UA/Referrer
 ```ts
-import { loadPlaylistFromUrl, normalizePlaylist } from 'iptv-parser';
+import { loadPlaylistFromUrl, normalizePlaylist } from 'iptv-m3u-parser';
 
 const pl = normalizePlaylist(
   await loadPlaylistFromUrl('https://example.com/playlist.m3u', {
@@ -77,7 +77,7 @@ const pl = normalizePlaylist(
 
 - Enrich with EPG (channels + programmes → categories + icon)
 ```ts
-import { parseXmltv, parseXmltvPrograms, enrichPlaylistWithEpg } from 'iptv-parser';
+import { parseXmltv, parseXmltvPrograms, enrichPlaylistWithEpg } from 'iptv-m3u-parser';
 
 const xml = await fetch('https://example.com/epg.xml').then(r => r.text());
 const { channels } = parseXmltv(xml);
@@ -87,7 +87,7 @@ const enriched = enrichPlaylistWithEpg(pl, channels, programs, { topNCategories:
 
 - Work with Xtream
 ```ts
-import { isXtreamUrl, parseXtream, makeXtreamCredentials, buildXtreamM3uUrl } from 'iptv-parser';
+import { isXtreamUrl, parseXtream, makeXtreamCredentials, buildXtreamM3uUrl } from 'iptv-m3u-parser';
 
 const info = parseXtream('http://host/get.php?username=u&password=p&type=m3u&output=ts');
 const creds = makeXtreamCredentials(info!.host, info!.username, info!.password);
