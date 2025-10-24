@@ -8,21 +8,36 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: write
+
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           registry-url: 'https://registry.npmjs.org'
-      - name: Bump version and create tag (manual)
+      - name: Prepare version and tag (no main commit)
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          npm version ${{ inputs.version }} -m "chore(release): v%s"
-          git push --follow-tags
+          # Safety: if tag exists, remove it locally and remotely
+          git tag -d v${{ inputs.version }} 2>/dev/null || true
+          git push origin :refs/tags/v${{ inputs.version }} 2>/dev/null || true
+          # Update package.json version without creating a commit/tag
+          npm version ${{ inputs.version }} --no-git-tag-version
+          # Create lightweight tag and push it
+          git tag v${{ inputs.version }}
+          git push origin refs/tags/v${{ inputs.version }}
+      - name: Configure npm auth
+        run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       - run: npm ci || npm i
       - run: npm run build
       - run: npm publish --access public
