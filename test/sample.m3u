@@ -1,0 +1,9 @@
+#EXTM3U url-tvg="https://example.com/epg.xml" tvg-shift="2" catchup="default" catchup-source="?utc={start}-{duration}"
+#EXTINF:-1 tvg-id="BBC1.uk" tvg-name="BBC One" tvg-logo="https://logo.example/bbc1.png" group-title="UK;News",BBC One HD
+#EXTVLCOPT:http-user-agent=MyPlayer/1.0
+#EXTVLCOPT:http-header=X-Test: 123
+#KODIPROP:inputstream.adaptive.manifest_type=hls
+http://example.com/stream/bbc1.m3u8
+
+#EXTINF:-1 group-title="Sports",ESPN
+http://example.com/espn/index.m3u8
