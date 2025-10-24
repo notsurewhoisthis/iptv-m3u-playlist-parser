@@ -1,9 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { parsePlaylist } from '../src/index.js';
-import { normalizePlaylist } from '../src/normalize.js';
-import { isXtreamUrl, parseXtream, buildXtreamM3uUrl } from '../src/xtream.js';
+import { parsePlaylist, normalizePlaylist, isXtreamUrl, parseXtream, buildXtreamM3uUrl } from '../dist/index.js';
 
 test('parses sample playlist', () => {
   const text = readFileSync(new URL('./sample.m3u', import.meta.url), 'utf8');
