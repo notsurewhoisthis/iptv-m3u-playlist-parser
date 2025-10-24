@@ -17,7 +17,7 @@ export function isXtreamUrl(url: string): boolean {
 export function parseXtream(url: string): XtreamQueryInfo | undefined {
   try {
     const u = new URL(url);
-    const host = `${u.protocol}//${u.host}`;
+    const host = `${u.protocol}//${u.hostname}${u.port ? ':' + u.port : ''}`;
     const q = u.searchParams;
     const username = q.get('username') ?? '';
     const password = q.get('password') ?? '';
@@ -39,7 +39,7 @@ export function parseXtream(url: string): XtreamQueryInfo | undefined {
 export function makeXtreamCredentials(host: string, username: string, password: string): XtreamCredentials {
   const h = host.endsWith('/') ? host.slice(0, -1) : host;
   const u = new URL(h);
-  return { host: `${u.protocol}//${u.host}`, username, password };
+  return { host: `${u.protocol}//${u.hostname}${u.port ? ':' + u.port : ''}`, username, password };
 }
 
 export function buildXtreamM3uUrl(creds: XtreamCredentials, opts?: { type?: string; output?: string; category?: string }): string {
