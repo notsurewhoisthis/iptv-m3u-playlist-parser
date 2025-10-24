@@ -4,7 +4,7 @@ Fetch and parse XMLTV to build simple channel indices for binding.
 
 Parse XMLTV
 ```ts
-import { parseXmltv } from 'iptv-m3u-parser';
+import { parseXmltv } from 'iptv-m3u-playlist-parser';
 
 const xml = await fetch('https://example.com/epg.xml').then(r => r.text());
 const { channels } = parseXmltv(xml);
@@ -12,7 +12,7 @@ const { channels } = parseXmltv(xml);
 
 Build Binding Index
 ```ts
-import { buildEpgBindingIndex, normalizePlaylist, parsePlaylist } from 'iptv-m3u-parser';
+import { buildEpgBindingIndex, normalizePlaylist, parsePlaylist } from 'iptv-m3u-playlist-parser';
 
 const idx = buildEpgBindingIndex(channels);
 const pl = normalizePlaylist(parsePlaylist(text));
@@ -32,7 +32,7 @@ Notes
 
 Parse Programmes (EPG events)
 ```ts
-import { parseXmltvPrograms, buildChannelCategoryMap } from 'iptv-m3u-parser';
+import { parseXmltvPrograms, buildChannelCategoryMap } from 'iptv-m3u-playlist-parser';
 
 const { programs } = parseXmltvPrograms(xml);
 // Each programme: { channelId, start, stop, title?, desc?, categories? }
