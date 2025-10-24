@@ -17,7 +17,13 @@ export function isXtreamUrl(url: string): boolean {
 export function parseXtream(url: string): XtreamQueryInfo | undefined {
   try {
     const u = new URL(url);
-    const host = `${u.protocol}//${u.hostname}${u.port ? ':' + u.port : ''}`;
+    // Node's URL drops default ports (80/443). Detect explicit port by inspecting the authority part of the input URL.
+    const schemeIdx = url.indexOf('://');
+    const afterScheme = schemeIdx >= 0 ? url.slice(schemeIdx + 3) : url;
+    const authority = afterScheme.split('/')[0]; // [host[:port]] or [IPv6]:port
+    const hadPort = (authority.includes(':') && !authority.startsWith('[')) || /\]:\d+$/.test(authority);
+    const defaultPort = u.protocol === 'https:' ? '443' : '80';
+    const host = `${u.protocol}//${u.hostname}${hadPort ? ':' + (u.port || defaultPort) : ''}`;
     const q = u.searchParams;
     const username = q.get('username') ?? '';
     const password = q.get('password') ?? '';
@@ -37,9 +43,9 @@ export function parseXtream(url: string): XtreamQueryInfo | undefined {
 }
 
 export function makeXtreamCredentials(host: string, username: string, password: string): XtreamCredentials {
-  const h = host.endsWith('/') ? host.slice(0, -1) : host;
-  const u = new URL(h);
-  return { host: `${u.protocol}//${u.hostname}${u.port ? ':' + u.port : ''}`, username, password };
+  // Preserve user-provided host exactly (minus trailing slash) to retain explicit ports
+  const h = host.replace(/\/+$/, '');
+  return { host: h, username, password };
 }
 
 export function buildXtreamM3uUrl(creds: XtreamCredentials, opts?: { type?: string; output?: string; category?: string }): string {
@@ -52,7 +58,13 @@ export function buildXtreamM3uUrl(creds: XtreamCredentials, opts?: { type?: stri
   return u.toString();
 }
 
-export function buildXtreamCatchupUrl(creds: XtreamCredentials, streamId: string | number, startUtc: number, durationSeconds: number, output: 'ts' | 'm3u8' = 'ts'): string {
+export function buildXtreamCatchupUrl(
+  creds: XtreamCredentials,
+  streamId: string | number,
+  startUtc: number,
+  durationSeconds: number,
+  output: 'ts' | 'm3u8' = 'ts'
+): string {
   // Format varies by panel; a common one:
   // host:port/streaming/timeshift.php?username=U&password=P&stream=STREAM_ID&start=YYYY-MM-DD:HH-MM&duration=HH-MM
   const u = new URL('/streaming/timeshift.php', creds.host);
