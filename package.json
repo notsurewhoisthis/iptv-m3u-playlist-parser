@@ -50,7 +50,13 @@
   },
   "devDependencies": {
     "@types/node": "^22.7.5",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.0",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^10.0.5",
+    "@semantic-release/npm": "^11.0.2",
     "prettier": "^3.3.3",
+    "semantic-release": "^23.1.1",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3"
   }
