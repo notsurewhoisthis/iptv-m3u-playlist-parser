@@ -4,6 +4,7 @@ Robust, zero-dependency parser for IPTV playlists (M3U/M3U8) that understands IP
 
 Highlights
 - M3U extended header parsing: `url-tvg`, `tvg-shift`, global `catchup*`.
+- Playlist-level `user-agent` honored for entries.
 - Channel entries with attributes: `tvg-id`, `tvg-name`, `tvg-logo`, `group-title`, duration, name.
 - Auxiliary tags: `#EXTGRP`, `#EXTVLCOPT:*`, `#KODIPROP:*` aggregated per entry.
 - Catch-up metadata: `catchup`, `catchup-source`, `catchup-hours`/`catchup-days`, `timeshift`.
@@ -41,11 +42,16 @@ What It Parses
 - Groups: `group-title` attribute and/or `#EXTGRP:Name` lines.
 - Player options: lines `#EXTVLCOPT:key=value` and `#KODIPROP:key=value` before the URL; merged into `entry.http` and `entry.kodiProps`.
 
+Xtream Helpers
+- Detect and parse Xtream URLs (`get.php`, `player_api.php`).
+- Build M3U download URLs and common timeshift (catchup) URLs.
+
 Typed Output (simplified)
 ```ts
 interface PlaylistHeader {
   tvgUrls: string[];
   tvgShift?: number; // minutes
+  userAgent?: string;
   catchup?: string;
   catchupSource?: string;
   catchupHours?: number;
@@ -75,6 +81,7 @@ interface Playlist {
 
 Docs
 - See docs/PLAYLIST_RULES.md for exact parsing rules and edge cases.
+- See docs/XTREAM.md for Xtream URL formats and helpers.
 
 Status
 - Early version, stable API planned for 1.0. Contributions welcome.

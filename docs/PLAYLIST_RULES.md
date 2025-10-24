@@ -7,6 +7,7 @@ File-Level Header
 - Attributes on `#EXTM3U` are parsed as space-delimited `key="value"` tokens. Supported keys (case-insensitive):
   - `url-tvg`: One or more EPG XMLTV URLs, separated by commas or semicolons. Stored as `header.tvgUrls`.
   - `tvg-shift`: Number of hours to shift EPG. Stored as minutes in `header.tvgShift` (hours × 60).
+  - `user-agent` or `http-user-agent`: Default UA applied to all entries as `entry.http.userAgent` unless overridden via `#EXTVLCOPT`.
   - `catchup`, `catchup-source`, `catchup-hours`, `catchup-days`, `timeshift`.
   - Unknown attributes preserved in `header.rawAttrs`.
 
@@ -22,6 +23,10 @@ Recognized Attributes (case-insensitive)
 - Grouping: `group-title` (may contain `;` to indicate multiple groups). Also supports `#EXTGRP:Group Name` lines appended between `#EXTINF` and URL.
 - Catch-up/time-shift: `catchup`, `catchup-source`, `catchup-hours`, `catchup-days`, `timeshift`.
 - Misc: `radio`, `type`, `channel-id`, `provider` are preserved if present.
+
+Aliases Normalization
+- Keys are normalized to lower-case. Common aliases resolved:
+  - `tvg_id` → `tvg-id`, `tvg_name` → `tvg-name`, `tvg_logo` → `tvg-logo`, `group_title`/`group` → `group-title`, `logo` → `tvg-logo`, `channel-id` → `tvg-id`.
 
 Player/Client Options
 - VLC: Any `#EXTVLCOPT:key=value` lines between `#EXTINF` and URL are recorded into `entry.http` or raw options:

@@ -22,6 +22,7 @@ function parseHeader(line: string): PlaylistHeader {
   const out: PlaylistHeader = {
     tvgUrls,
     tvgShift,
+    userAgent: rawAttrs['user-agent'] || rawAttrs['http-user-agent'],
     catchup: rawAttrs['catchup'],
     catchupSource: rawAttrs['catchup-source'],
     catchupHours: toNumber(rawAttrs['catchup-hours']),
@@ -101,6 +102,9 @@ export function parsePlaylist(text: string): Playlist {
         chno: attrs['tvg-chno'] ?? attrs['tvg-chno'],
       };
       let httpHeaders: { userAgent?: string; referer?: string; cookie?: string; headers?: Record<string, string> } | undefined;
+      if (header.userAgent) {
+        httpHeaders = { ...(httpHeaders ?? {}), userAgent: header.userAgent, headers: (httpHeaders?.headers ?? {}) };
+      }
       let kodiProps: Record<string, string> | undefined;
 
       // Groups from group-title

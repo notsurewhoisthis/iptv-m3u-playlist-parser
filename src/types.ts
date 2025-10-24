@@ -3,6 +3,7 @@ export type Dict<T = string> = Record<string, T>;
 export interface PlaylistHeader {
   tvgUrls: string[];
   tvgShift?: number; // minutes
+  userAgent?: string;
   catchup?: string;
   catchupSource?: string;
   catchupHours?: number;
@@ -34,4 +35,16 @@ export interface Playlist {
   header: PlaylistHeader;
   items: Entry[];
   warnings: string[];
+}
+
+export interface XtreamCredentials {
+  host: string; // scheme + host + optional port, no trailing slash
+  username: string;
+  password: string;
+}
+
+export interface XtreamQueryInfo extends XtreamCredentials {
+  type?: string; // m3u, m3u_plus, live, series, vod, etc.
+  output?: string; // ts, m3u8, hls
+  category?: string;
 }
