@@ -1,16 +1,26 @@
 IPTV Parser
 
-Robust, zero-dependency parser for IPTV playlists (M3U/M3U8) that understands IPTV-specific tags and conventions used across providers and players.
+The modern, batteries-included toolkit for parsing, normalizing, and enriching IPTV playlists.
+
+Why this exists
+- IPTV playlists in the wild are messy: different providers, different conventions, and plenty of edge cases. Building a reliable player means writing lots of glue code… for every project… over and over.
+- IPTV Parser gives you a proven, well-documented, and thoroughly-tested foundation you can drop into any app. Less glue. Fewer surprises. Faster to “it just works”.
+
+What makes it different
+- Purpose-built for IPTV: Not just a generic M3U parser. Understands IPTV-specific attributes (`tvg-*`, `group-title`), auxiliary tags (`#EXTGRP`, `#EXTVLCOPT`, `#KODIPROP`), and catch‑up conventions.
+- Normalization that saves you hours: Unifies common aliases (`tvg_id`→`tvg-id`, `group_title`→`group-title`, etc.), merges group sources, and prefers clean names.
+- Predictable output: Clear TypeScript types, warnings for suspicious lines, and preservation of unknown attributes so nothing is lost.
+- Extensible “beyond-the-file” toolkit: First-class helpers for Xtream URLs, XMLTV (EPG) parsing, and one‑line EPG enrichment into your playlist items.
+- Production ready: CI across Node 18/20/22, focused test suite, and deliberate docs you can trust.
 
 Highlights
-- M3U extended header parsing: `url-tvg`, `tvg-shift`, global `catchup*`.
-- Playlist-level `user-agent` honored for entries.
-- Channel entries with attributes: `tvg-id`, `tvg-name`, `tvg-logo`, `group-title`, duration, name.
-- Auxiliary tags: `#EXTGRP`, `#EXTVLCOPT:*`, `#KODIPROP:*` aggregated per entry.
-- Catch-up metadata: `catchup`, `catchup-source`, `catchup-hours`/`catchup-days`, `timeshift`.
-- HTTP hints: user-agent, referer, cookies, arbitrary headers via VLC options.
-- Normalizes encodings, line endings, BOM, and whitespace; resilient to malformed lines.
-- Clear TypeScript types and small, composable API; handy CLI that outputs JSON.
+- M3U/M3U8 extended header parsing: `url-tvg`, `tvg-shift`, global `catchup*`, `timeshift`, playlist-level `user-agent`.
+- Entries: `#EXTINF` with duration, IPTV attributes (`tvg-id`, `tvg-name`, `tvg-logo`, `group-title`), robust name handling.
+- Aux tags: `#EXTGRP` groups, `#EXTVLCOPT:*` (UA/referrer/cookie/headers), `#KODIPROP:*` captured and merged.
+- Normalization: Resolves aliases, unifies groups, preserves unknowns in `attrs` and flags duplicates.
+- Xtream utilities: Detect/parse endpoints, build M3U downloads and common catch‑up URLs.
+- EPG (XMLTV): Parse channels + programmes, bind playlist items, and enrich with categories/icon in one call.
+- Designed for huge playlists: String-based, zero I/O, no network until you ask for it.
 
 Install
 ```
@@ -45,6 +55,44 @@ What It Parses
 Xtream Helpers
 - Detect and parse Xtream URLs (`get.php`, `player_api.php`).
 - Build M3U download URLs and common timeshift (catchup) URLs.
+
+EPG Enrichment
+- parseXmltv + parseXmltvPrograms to ingest XMLTV.
+- enrichPlaylistWithEpg(playlist, channels, programs, { topNCategories, attachIconIfMissing }) attaches:
+  - extras.epg: { channelId, iconUrl, categories[] }
+  - tvg.logo from EPG icon if missing and attachIconIfMissing is true (default).
+
+60‑second recipes
+- Load a remote playlist with custom UA/Referrer
+```ts
+import { loadPlaylistFromUrl, normalizePlaylist } from 'iptv-parser';
+
+const pl = normalizePlaylist(
+  await loadPlaylistFromUrl('https://example.com/playlist.m3u', {
+    userAgent: 'MyPlayer/1.0',
+    referer: 'https://example.com',
+  })
+);
+```
+
+- Enrich with EPG (channels + programmes → categories + icon)
+```ts
+import { parseXmltv, parseXmltvPrograms, enrichPlaylistWithEpg } from 'iptv-parser';
+
+const xml = await fetch('https://example.com/epg.xml').then(r => r.text());
+const { channels } = parseXmltv(xml);
+const { programs } = parseXmltvPrograms(xml);
+const enriched = enrichPlaylistWithEpg(pl, channels, programs, { topNCategories: 5 });
+```
+
+- Work with Xtream
+```ts
+import { isXtreamUrl, parseXtream, makeXtreamCredentials, buildXtreamM3uUrl } from 'iptv-parser';
+
+const info = parseXtream('http://host/get.php?username=u&password=p&type=m3u&output=ts');
+const creds = makeXtreamCredentials(info!.host, info!.username, info!.password);
+const m3uUrl = buildXtreamM3uUrl(creds, { type: 'm3u', output: 'ts' });
+```
 
 Typed Output (simplified)
 ```ts
@@ -82,6 +130,22 @@ interface Playlist {
 Docs
 - See docs/PLAYLIST_RULES.md for exact parsing rules and edge cases.
 - See docs/XTREAM.md for Xtream URL formats and helpers.
+- See docs/EPG.md for XMLTV parsing, binding, and programme categories.
 
 Status
 - Early version, stable API planned for 1.0. Contributions welcome.
+
+Project philosophy
+- Be precise: clearly define parsing behavior and keep the output shape stable.
+- Be forgiving: accept the weirdness of real‑world playlists and keep going with warnings.
+- Be pragmatic: expose small, composable helpers rather than heavy frameworks.
+
+Roadmap
+- More provider-specific attribute aliases and normalizations
+- Optional streaming parser for extremely large files
+- Built-in filters for deduplication/grouping
+- Richer EPG programme queries (by time window, now/next, etc.)
+
+Contributing
+- PRs are welcome. Please run `npm run build` and `npm test` before opening a PR.
+- If you’re proposing a parsing change, include a failing test and a short note in docs/PLAYLIST_RULES.md.
