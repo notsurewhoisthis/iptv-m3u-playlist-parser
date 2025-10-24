@@ -1,3 +1,10 @@
+## [0.2.4](https://github.com/notsurewhoisthis/iptv-parser/compare/v0.2.3...v0.2.4) (2025-10-24)
+
+
+### Bug Fixes
+
+* **xtream:** robust detection of explicit port in input authority; use default 80/443 to preserve explicit port when Node URL omits it ([4c4ddde](https://github.com/notsurewhoisthis/iptv-parser/commit/4c4ddde458ecbd794d06a3114bfda5f003f51e7c))
+
 ## [0.2.3](https://github.com/notsurewhoisthis/iptv-parser/compare/v0.2.2...v0.2.3) (2025-10-24)
 
 
