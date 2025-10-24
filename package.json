@@ -1,6 +1,6 @@
 {
   "name": "iptv-parser",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": false,
   "description": "Robust IPTV M3U/M3U8 playlist parser with IPTV-specific tags (tvg-*, group-title, EXTGRP, EXTVLCOPT, KODIPROP, catchup, etc.).",
   "type": "module",
@@ -13,7 +13,8 @@
     "build": "tsc -p tsconfig.json",
     "dev": "tsx examples/parse-file.ts",
     "test": "node --test",
-    "fmt": "prettier -w ."
+    "fmt": "prettier -w .",
+    "prepack": "npm run build"
   },
   "keywords": [
     "iptv",
@@ -25,7 +26,28 @@
     "epg"
   ],
   "author": "",
-  "license": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/notsurewhoisthis/iptv-parser.git"
+  },
+  "homepage": "https://github.com/notsurewhoisthis/iptv-parser#readme",
+  "bugs": {
+    "url": "https://github.com/notsurewhoisthis/iptv-parser/issues"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "README.md",
+    "docs",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "fast-xml-parser": "^4.5.0"
+  },
   "devDependencies": {
     "@types/node": "^22.7.5",
     "prettier": "^3.3.3",
