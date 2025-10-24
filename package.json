@@ -1,6 +1,6 @@
 {
   "name": "iptv-parser",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "private": false,
   "description": "Robust IPTV M3U/M3U8 playlist parser with IPTV-specific tags (tvg-*, group-title, EXTGRP, EXTVLCOPT, KODIPROP, catchup, etc.).",
   "type": "module",
