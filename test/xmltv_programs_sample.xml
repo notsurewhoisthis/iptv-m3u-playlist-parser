@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tv>
+  <channel id="news">
+    <display-name>News Channel</display-name>
+  </channel>
+  <channel id="sports">
+    <display-name>Sports Channel</display-name>
+  </channel>
+  <programme start="20251024060000 +0000" stop="20251024070000 +0000" channel="news">
+    <title>Morning Headlines</title>
+    <category>News</category>
+    <category>Politics</category>
+  </programme>
+  <programme start="20251024070000 +0000" stop="20251024080000 +0000" channel="news">
+    <title>World Report</title>
+    <category>News</category>
+  </programme>
+  <programme start="20251024060000 +0000" stop="20251024070000 +0000" channel="sports">
+    <title>Highlights</title>
+    <category>Sports</category>
+  </programme>
+</tv>
