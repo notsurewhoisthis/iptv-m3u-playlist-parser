@@ -1,4 +1,4 @@
-import { XtreamCredentials, XtreamQueryInfo } from './types.js';
+import { XtreamCredentials, XtreamQueryInfo } from "./types.js";
 
 // Recognize common Xtream endpoints
 // - http(s)://host[:port]/get.php?username=U&password=P&type=m3u[&_params]
@@ -8,7 +8,7 @@ export function isXtreamUrl(url: string): boolean {
   try {
     const u = new URL(url);
     const path = u.pathname.toLowerCase();
-    return path.endsWith('/get.php') || path.endsWith('/player_api.php');
+    return path.endsWith("/get.php") || path.endsWith("/player_api.php");
   } catch {
     return false;
   }
@@ -18,43 +18,52 @@ export function parseXtream(url: string): XtreamQueryInfo | undefined {
   try {
     const u = new URL(url);
     // Node's URL drops default ports (80/443). Detect explicit port by inspecting the authority part of the input URL.
-    const schemeIdx = url.indexOf('://');
+    const schemeIdx = url.indexOf("://");
     const afterScheme = schemeIdx >= 0 ? url.slice(schemeIdx + 3) : url;
-    const authority = afterScheme.split('/')[0]; // [host[:port]] or [IPv6]:port
-    const hadPort = (authority.includes(':') && !authority.startsWith('[')) || /\]:\d+$/.test(authority);
-    const defaultPort = u.protocol === 'https:' ? '443' : '80';
-    const host = `${u.protocol}//${u.hostname}${hadPort ? ':' + (u.port || defaultPort) : ''}`;
+    const authority = afterScheme.split("/")[0]; // [host[:port]] or [IPv6]:port
+    const hadPort =
+      (authority.includes(":") && !authority.startsWith("[")) ||
+      /\]:\d+$/.test(authority);
+    const defaultPort = u.protocol === "https:" ? "443" : "80";
+    const host = `${u.protocol}//${u.hostname}${hadPort ? ":" + (u.port || defaultPort) : ""}`;
     const q = u.searchParams;
-    const username = q.get('username') ?? '';
-    const password = q.get('password') ?? '';
+    const username = q.get("username") ?? "";
+    const password = q.get("password") ?? "";
     if (!username || !password) return undefined;
     const info: XtreamQueryInfo = {
       host,
       username,
       password,
     };
-    if (q.has('type')) info.type = q.get('type') ?? undefined;
-    if (q.has('output')) info.output = q.get('output') ?? undefined;
-    if (q.has('category')) info.category = q.get('category') ?? undefined;
+    if (q.has("type")) info.type = q.get("type") ?? undefined;
+    if (q.has("output")) info.output = q.get("output") ?? undefined;
+    if (q.has("category")) info.category = q.get("category") ?? undefined;
     return info;
   } catch {
     return undefined;
   }
 }
 
-export function makeXtreamCredentials(host: string, username: string, password: string): XtreamCredentials {
+export function makeXtreamCredentials(
+  host: string,
+  username: string,
+  password: string,
+): XtreamCredentials {
   // Preserve user-provided host exactly (minus trailing slash) to retain explicit ports
-  const h = host.replace(/\/+$/, '');
+  const h = host.replace(/\/+$/, "");
   return { host: h, username, password };
 }
 
-export function buildXtreamM3uUrl(creds: XtreamCredentials, opts?: { type?: string; output?: string; category?: string }): string {
-  const u = new URL('/get.php', creds.host);
-  u.searchParams.set('username', creds.username);
-  u.searchParams.set('password', creds.password);
-  u.searchParams.set('type', opts?.type ?? 'm3u');
-  if (opts?.category) u.searchParams.set('category', opts.category);
-  if (opts?.output) u.searchParams.set('output', opts.output);
+export function buildXtreamM3uUrl(
+  creds: XtreamCredentials,
+  opts?: { type?: string; output?: string; category?: string },
+): string {
+  const u = new URL("/get.php", creds.host);
+  u.searchParams.set("username", creds.username);
+  u.searchParams.set("password", creds.password);
+  u.searchParams.set("type", opts?.type ?? "m3u");
+  if (opts?.category) u.searchParams.set("category", opts.category);
+  if (opts?.output) u.searchParams.set("output", opts.output);
   return u.toString();
 }
 
@@ -63,22 +72,22 @@ export function buildXtreamCatchupUrl(
   streamId: string | number,
   startUtc: number,
   durationSeconds: number,
-  output: 'ts' | 'm3u8' = 'ts'
+  output: "ts" | "m3u8" = "ts",
 ): string {
   // Format varies by panel; a common one:
   // host:port/streaming/timeshift.php?username=U&password=P&stream=STREAM_ID&start=YYYY-MM-DD:HH-MM&duration=HH-MM
-  const u = new URL('/streaming/timeshift.php', creds.host);
-  u.searchParams.set('username', creds.username);
-  u.searchParams.set('password', creds.password);
-  u.searchParams.set('stream', String(streamId));
+  const u = new URL("/streaming/timeshift.php", creds.host);
+  u.searchParams.set("username", creds.username);
+  u.searchParams.set("password", creds.password);
+  u.searchParams.set("stream", String(streamId));
   // A simple HH-MM formatting (client may adapt as needed):
   const d = new Date(startUtc);
-  const pad = (n: number) => String(n).padStart(2, '0');
+  const pad = (n: number) => String(n).padStart(2, "0");
   const dt = `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}:${pad(d.getUTCHours())}-${pad(d.getUTCMinutes())}`;
   const hrs = Math.floor(durationSeconds / 3600);
   const mins = Math.floor((durationSeconds % 3600) / 60);
-  u.searchParams.set('start', dt);
-  u.searchParams.set('duration', `${pad(hrs)}-${pad(mins)}`);
-  if (output) u.searchParams.set('output', output);
+  u.searchParams.set("start", dt);
+  u.searchParams.set("duration", `${pad(hrs)}-${pad(mins)}`);
+  if (output) u.searchParams.set("output", output);
   return u.toString();
 }

@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version (e.g., 0.2.1)'
+        description: "Version (e.g., 0.2.1)"
         required: true
         type: string
 
@@ -21,7 +21,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          registry-url: 'https://registry.npmjs.org'
+          registry-url: "https://registry.npmjs.org"
       - name: Prepare version and tag (no main commit)
         run: |
           git config user.name "github-actions[bot]"

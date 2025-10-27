@@ -1,5 +1,11 @@
-import { Playlist } from './types.js';
-import { TvgChannel, TvgProgramme, buildEpgBindingIndex, buildChannelCategoryMap, normalizeName } from './xmltv.js';
+import { Playlist } from "./types.js";
+import {
+  TvgChannel,
+  TvgProgramme,
+  buildEpgBindingIndex,
+  buildChannelCategoryMap,
+  normalizeName,
+} from "./xmltv.js";
 
 export interface EnrichOptions {
   topNCategories?: number; // default 3
@@ -10,7 +16,7 @@ export function enrichPlaylistWithEpg(
   playlist: Playlist,
   channels: TvgChannel[],
   programs: TvgProgramme[],
-  opts: EnrichOptions = {}
+  opts: EnrichOptions = {},
 ): Playlist {
   const topN = opts.topNCategories ?? 3;
   const attachIcon = opts.attachIconIfMissing ?? true;
@@ -23,7 +29,7 @@ export function enrichPlaylistWithEpg(
     let ch: TvgChannel | undefined;
     if (tvgId) ch = idx.byId.get(tvgId);
     if (!ch) {
-      const key = normalizeName(it.tvg?.name || it.name || '');
+      const key = normalizeName(it.tvg?.name || it.name || "");
       if (key) ch = idx.byName.get(key);
     }
     if (!ch) return it;

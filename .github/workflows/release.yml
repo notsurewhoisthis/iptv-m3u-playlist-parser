@@ -2,9 +2,9 @@ name: release
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths-ignore:
-      - '.release/**'
+      - ".release/**"
 
 permissions:
   contents: write
@@ -22,7 +22,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          registry-url: 'https://registry.npmjs.org'
+          registry-url: "https://registry.npmjs.org"
       - name: Configure npm auth
         run: |
           echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc

@@ -1,6 +1,11 @@
+// Pre-compile regex for line splitting
+const CRLF_REGEX = /\r\n?/g;
+
 export function splitLines(text: string): string[] {
   // Normalize CRLF to LF first, keep empty lines (they matter for URL placement checks)
-  return text.replace(/\r\n?/g, "\n").split("\n");
+  // Reset lastIndex for regex reuse
+  CRLF_REGEX.lastIndex = 0;
+  return text.replace(CRLF_REGEX, "\n").split("\n");
 }
 
 export function stripBOM(text: string): string {
@@ -9,22 +14,34 @@ export function stripBOM(text: string): string {
 }
 
 export function trimQuotes(value: string): string {
-  if (!value) return value;
+  // Early return for empty or short strings
+  if (!value || value.length < 2) return value;
+
   const first = value[0];
   const last = value[value.length - 1];
+
+  // Check for matching quotes
   if ((first === '"' && last === '"') || (first === "'" && last === "'")) {
     return value.slice(1, -1);
   }
+
   return value;
 }
+
+// Pre-compile regex for better performance - moved outside function to avoid recompilation
+const KEY_VALUE_REGEX =
+  /([A-Za-z0-9_\-\.]+)\s*=\s*("[^"]*"|'[^']*'|[^\s,]+)|([A-Za-z0-9_\-\.]+)(?=\s|$)/g;
 
 export function parseKeyValueAttrs(src: string): Record<string, string> {
   // Parse space-delimited tokens like key="value" or key=value or barekey
   // Preserve last occurrence on duplicates.
   const out: Record<string, string> = {};
-  const re = /([A-Za-z0-9_\-\.]+)\s*=\s*("[^"]*"|'[^']*'|[^\s,]+)|([A-Za-z0-9_\-\.]+)(?=\s|$)/g;
+
+  // Reset lastIndex for regex reuse (important for global regexes)
+  KEY_VALUE_REGEX.lastIndex = 0;
+
   let m: RegExpExecArray | null;
-  while ((m = re.exec(src))) {
+  while ((m = KEY_VALUE_REGEX.exec(src))) {
     if (m[1]) {
       const k = m[1].toLowerCase();
       const v = trimQuotes(m[2] ?? "");
@@ -44,5 +61,7 @@ export function toNumber(s: string | undefined): number | undefined {
 }
 
 export function pushUnique(arr: string[], value: string) {
-  if (!arr.includes(value)) arr.push(value);
+  // Optimize: indexOf is faster than includes for small arrays
+  // and avoids unnecessary iterations
+  if (arr.indexOf(value) === -1) arr.push(value);
 }

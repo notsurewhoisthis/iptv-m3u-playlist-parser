@@ -1,13 +1,13 @@
-import { Entry, Playlist } from './types.js';
+import { Entry, Playlist } from "./types.js";
 
 const KEY_ALIASES: Record<string, string> = {
-  'tvg_id': 'tvg-id',
-  'tvg_name': 'tvg-name',
-  'tvg_logo': 'tvg-logo',
-  'group_title': 'group-title',
-  'group': 'group-title',
-  'logo': 'tvg-logo',
-  'channel-id': 'tvg-id',
+  tvg_id: "tvg-id",
+  tvg_name: "tvg-name",
+  tvg_logo: "tvg-logo",
+  group_title: "group-title",
+  group: "group-title",
+  logo: "tvg-logo",
+  "channel-id": "tvg-id",
 };
 
 export function normalizeEntry(e: Entry): Entry {
@@ -20,19 +20,22 @@ export function normalizeEntry(e: Entry): Entry {
 
   // Normalize groups from attrs if absent
   let group = e.group ?? [];
-  const groupTitle = attrs['group-title'];
+  const groupTitle = attrs["group-title"];
   if (groupTitle) {
-    for (const g of groupTitle.split(';').map((s) => s.trim()).filter(Boolean)) {
+    for (const g of groupTitle
+      .split(";")
+      .map((s) => s.trim())
+      .filter(Boolean)) {
       if (!group.includes(g)) group.push(g);
     }
   }
 
   // Normalize tvg structure
   const tvg = {
-    id: attrs['tvg-id'] ?? e.tvg?.id,
-    name: attrs['tvg-name'] ?? e.tvg?.name,
-    logo: attrs['tvg-logo'] ?? e.tvg?.logo,
-    chno: attrs['tvg-chno'] ?? e.tvg?.chno,
+    id: attrs["tvg-id"] ?? e.tvg?.id,
+    name: attrs["tvg-name"] ?? e.tvg?.name,
+    logo: attrs["tvg-logo"] ?? e.tvg?.logo,
+    chno: attrs["tvg-chno"] ?? e.tvg?.chno,
   };
   const hasTvg = tvg.id || tvg.name || tvg.logo || tvg.chno;
 
