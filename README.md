@@ -1,6 +1,6 @@
-IPTV Parser
+IPTV M3U Playlist Parser
 
-The modern, batteries-included toolkit for parsing, normalizing, and enriching IPTV playlists.
+The modern, batteries-included toolkit for parsing, normalizing, and enriching IPTV playlists, now with **full HLS support**.
 
 Why this exists
 
@@ -17,13 +17,29 @@ What makes it different
 
 Highlights
 
+**IPTV Parser:**
+
 - M3U/M3U8 extended header parsing: `url-tvg`, `tvg-shift`, global `catchup*`, `timeshift`, playlist-level `user-agent`.
 - Entries: `#EXTINF` with duration, IPTV attributes (`tvg-id`, `tvg-name`, `tvg-logo`, `group-title`), robust name handling.
 - Aux tags: `#EXTGRP` groups, `#EXTVLCOPT:*` (UA/referrer/cookie/headers), `#KODIPROP:*` captured and merged.
 - Normalization: Resolves aliases, unifies groups, preserves unknowns in `attrs` and flags duplicates.
 - Xtream utilities: Detect/parse endpoints, build M3U downloads and common catch‑up URLs.
 - EPG (XMLTV): Parse channels + programmes, bind playlist items, and enrich with categories/icon in one call.
+
+**HLS Parser (NEW in v0.3.0):**
+
+- **70+ HLS tags** - Complete Apple HLS specification support
+- **Master playlists** - Variant streams, audio/video/subtitle renditions, I-frame streams
+- **Media playlists** - VOD, EVENT, LIVE playlists with segments
+- **Encryption** - AES-128, SAMPLE-AES, SAMPLE-AES-CENC, SAMPLE-AES-CTR
+- **Advanced features** - Byte-range, date ranges, low-latency HLS, variable substitution
+- **Auto-detection** - Smart detection between IPTV and HLS formats
+- **Zero breaking changes** - Dual parser architecture, 100% backward compatible
+
+**Universal:**
+
 - Designed for huge playlists: String-based, zero I/O, no network until you ask for it.
+- Full TypeScript support with comprehensive type definitions
 
 Install
 
@@ -32,6 +48,8 @@ npm i iptv-m3u-playlist-parser
 ```
 
 Quick Start (Library)
+
+**IPTV Playlists:**
 
 ```ts
 import { parsePlaylist } from "iptv-m3u-playlist-parser";
@@ -43,6 +61,49 @@ const result = parsePlaylist(text);
 console.log(result.header.tvgUrls);
 for (const ch of result.items) {
   console.log(ch.name, ch.tvg?.id, ch.group?.[0], ch.url);
+}
+```
+
+**HLS Playlists:**
+
+```ts
+import {
+  parseHlsPlaylist,
+  isMasterPlaylist,
+  isMediaPlaylist,
+} from "iptv-m3u-playlist-parser";
+
+const m3u8Text = readFileSync("playlist.m3u8", "utf8");
+const hls = parseHlsPlaylist(m3u8Text);
+
+if (isMasterPlaylist(hls)) {
+  console.log(`Master playlist with ${hls.variants.length} variants`);
+  hls.variants.forEach((v) => {
+    console.log(
+      `  ${v.resolution?.width}x${v.resolution?.height} @ ${v.bandwidth}bps - ${v.uri}`,
+    );
+  });
+} else if (isMediaPlaylist(hls)) {
+  console.log(
+    `Media playlist (${hls.playlistType || "LIVE"}) with ${hls.segments.length} segments`,
+  );
+}
+```
+
+**Auto-Detection:**
+
+```ts
+import { parsePlaylistAuto } from "iptv-m3u-playlist-parser";
+
+const text = readFileSync("playlist.m3u8", "utf8");
+const result = parsePlaylistAuto(text);
+
+if (result.format === "hls") {
+  console.log("HLS playlist detected");
+  // result.playlist is HlsPlaylist
+} else {
+  console.log("IPTV playlist detected");
+  // result.playlist is IptvPlaylist
 }
 ```
 
@@ -164,10 +225,11 @@ interface Playlist {
 
 Docs
 
-- See docs/PLAYLIST_RULES.md for exact parsing rules and edge cases.
-- See docs/XTREAM.md for Xtream URL formats and helpers.
-- See docs/EPG.md for XMLTV parsing, binding, and programme categories.
-- See docs/gemini-analysis.md for performance optimization analysis and implementation details.
+- **[HLS Parser](docs/HLS.md)** - Complete HLS parsing guide with 70+ tags, examples, and type system
+- **[PLAYLIST_RULES.md](docs/PLAYLIST_RULES.md)** - IPTV parsing rules and edge cases
+- **[XTREAM.md](docs/XTREAM.md)** - Xtream URL formats and helpers
+- **[EPG.md](docs/EPG.md)** - XMLTV parsing, binding, and programme categories
+- **[gemini-analysis.md](docs/gemini-analysis.md)** - Performance optimization analysis
 
 Status
 

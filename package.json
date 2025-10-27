@@ -1,8 +1,8 @@
 {
   "name": "iptv-m3u-playlist-parser",
-  "version": "0.2.5",
+  "version": "0.3.0",
   "private": false,
-  "description": "Robust IPTV M3U/M3U8 playlist parser with IPTV-specific tags (tvg-*, group-title, EXTGRP, EXTVLCOPT, KODIPROP, catchup, etc.).",
+  "description": "Robust IPTV M3U/M3U8 playlist parser with full HLS support (70+ tags). Includes IPTV-specific tags (tvg-*, group-title, EXTGRP, EXTVLCOPT, KODIPROP, catchup) and complete Apple HLS specification coverage.",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -22,6 +22,10 @@
     "m3u8",
     "playlist",
     "parser",
+    "hls",
+    "http-live-streaming",
+    "streaming",
+    "video",
     "xmltv",
     "epg"
   ],

@@ -1,0 +1,10 @@
+#EXTM3U
+#EXT-X-VERSION:3
+#EXT-X-TARGETDURATION:10
+#EXT-X-MEDIA-SEQUENCE:7794
+#EXTINF:9.9,
+https://example.com/segment7794.ts
+#EXTINF:9.9,
+https://example.com/segment7795.ts
+#EXTINF:9.9,
+https://example.com/segment7796.ts
