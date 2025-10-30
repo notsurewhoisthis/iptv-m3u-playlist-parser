@@ -1,5 +1,75 @@
 export type Dict<T = string> = Record<string, T>;
 
+/**
+ * Media type classification for IPTV entries
+ */
+export enum MediaKind {
+  LIVE = "live",
+  MOVIE = "movie",
+  SERIES = "series",
+  RADIO = "radio",
+}
+
+/**
+ * Series metadata extracted from entry name/attributes
+ */
+export interface SeriesInfo {
+  seriesName?: string;
+  season?: number;
+  episode?: number;
+}
+
+/**
+ * Configuration options for media classification
+ */
+export interface ClassificationOptions {
+  /** Enable automatic media kind detection (default: true) */
+  enableAutoClassification?: boolean;
+  /** Locale for keyword matching: 'en', 'tr', 'de', 'fr', 'es', 'ar' (default: 'en') */
+  locale?: string;
+  /** Custom keywords for classification */
+  customKeywords?: {
+    live?: string[];
+    movie?: string[];
+    series?: string[];
+    radio?: string[];
+  };
+  /** Conservative HLS detection (default: true) - treats .m3u8 as live unless strong VOD signals */
+  conservativeHls?: boolean;
+}
+
+/**
+ * Warning codes for playlist parsing issues
+ */
+export enum WarningCode {
+  MISSING_HEADER = "missing_header",
+  NO_URL = "no_url",
+  MALFORMED_EXTINF = "malformed_extinf",
+  INVALID_DURATION = "invalid_duration",
+  DUPLICATE_ENTRY = "duplicate_entry",
+  PLACEHOLDER_LOGO = "placeholder_logo",
+  INVALID_ENCODING = "invalid_encoding",
+}
+
+/**
+ * Structured warning with context
+ */
+export interface Warning {
+  code: WarningCode;
+  line?: number;
+  message: string;
+  context?: any;
+}
+
+/**
+ * Validation result for playlist/entry validation
+ */
+export interface ValidationResult {
+  valid: boolean;
+  warnings: Warning[];
+  errors?: string[];
+}
+
 export interface PlaylistHeader {
   tvgUrls: string[];
   tvgShift?: number; // minutes
@@ -29,6 +99,12 @@ export interface Entry {
   kodiProps?: Dict;
   attrs: Dict; // all parsed attributes (lower-cased keys)
   extras?: Record<string, unknown>;
+  /** Auto-detected or explicit media kind (live/movie/series/radio) */
+  kind?: MediaKind;
+  /** Extracted series information (name, season, episode) */
+  series?: SeriesInfo;
+  /** Original position in playlist (useful for multi-source merging) */
+  providerOrder?: number;
 }
 
 export interface Playlist {
@@ -47,4 +123,26 @@ export interface XtreamQueryInfo extends XtreamCredentials {
   type?: string; // m3u, m3u_plus, live, series, vod, etc.
   output?: string; // ts, m3u8, hls
   category?: string;
+}
+
+/**
+ * Aggregated series with all episodes grouped by season
+ */
+export interface SeriesGroup {
+  seriesName: string;
+  seasons: Map<number, Entry[]>;
+  categories: string[];
+  firstProviderOrder?: number;
+}
+
+/**
+ * Options for streaming parser
+ */
+export interface StreamingOptions {
+  /** Buffer size in bytes (default: 65536 / 64KB) */
+  bufferSize?: number;
+  /** Callback for progress updates */
+  onProgress?: (processed: number, total?: number) => void;
+  /** Batch size for emitting entries (default: 100) */
+  batchSize?: number;
 }
