@@ -5,7 +5,7 @@
  * production-proven Diamond IPTV parser logic.
  */
 
-import type { Entry, MediaKind, ClassificationOptions } from "./types.js";
+import { Entry, MediaKind, ClassificationOptions } from "./types.js";
 import {
   normalizeText,
   getKeywords,
@@ -87,20 +87,20 @@ function classifyByExplicitType(entry: Entry): MediaKind | undefined {
   const lower = typeAttr.toLowerCase();
 
   if (lower.includes("movie") || lower === "vod") {
-    return "movie";
+    return MediaKind.MOVIE;
   }
   if (
     lower.includes("series") ||
     lower.includes("show") ||
     lower === "tv-show"
   ) {
-    return "series";
+    return MediaKind.SERIES;
   }
   if (lower === "live" || lower === "channel") {
-    return "live";
+    return MediaKind.LIVE;
   }
   if (lower === "radio" || lower === "audio") {
-    return "radio";
+    return MediaKind.RADIO;
   }
 
   return undefined;
@@ -141,7 +141,7 @@ function classifyByGroup(
 
   // Radio detection (highest priority for groups)
   if (containsKeywords(normalized, radioKeywords, locale)) {
-    return "radio";
+    return MediaKind.RADIO;
   }
 
   // Count matches for each category
@@ -158,22 +158,22 @@ function classifyByGroup(
 
   // Series detection
   if (seriesScore > 0 && seriesScore >= movieScore) {
-    return "series";
+    return MediaKind.SERIES;
   }
 
   // Movie detection
   if (movieScore > 0 && movieScore > liveScore) {
-    return "movie";
+    return MediaKind.MOVIE;
   }
 
   // Platform hints without clear series/movie signals → assume movie
   if (hasPlatformHint && movieScore === 0 && seriesScore === 0) {
-    return "movie";
+    return MediaKind.MOVIE;
   }
 
   // Live detection
   if (liveScore > 0) {
-    return "live";
+    return MediaKind.LIVE;
   }
 
   return undefined;
@@ -190,7 +190,7 @@ function classifyByName(entry: Entry, locale: string): MediaKind | undefined {
 
   // Series pattern: S01E02 or similar
   if (isSeriesEntry(name)) {
-    return "series";
+    return MediaKind.SERIES;
   }
 
   // Season/Episode text patterns
@@ -198,12 +198,12 @@ function classifyByName(entry: Entry, locale: string): MediaKind | undefined {
     /\bseason\s*\d+/i.test(normalized) ||
     /\bepisode\s*\d+/i.test(normalized)
   ) {
-    return "series";
+    return MediaKind.SERIES;
   }
 
   // Year in parentheses suggests movie: "Inception (2010)"
   if (/\((19\d{2}|20\d{2})\)/.test(name)) {
-    return "movie";
+    return MediaKind.MOVIE;
   }
 
   // Standalone year in name (common in European listings)
@@ -212,7 +212,7 @@ function classifyByName(entry: Entry, locale: string): MediaKind | undefined {
     (locale === "de" || locale === "fr") &&
     /\b(19|20)\d{2}\b/.test(normalized)
   ) {
-    return "movie";
+    return MediaKind.MOVIE;
   }
 
   return undefined;
@@ -229,7 +229,7 @@ function classifyByUrl(entry: Entry): MediaKind | undefined {
 
   // Live indicators
   if (lower.includes("/live/") || lower.includes("/channel/")) {
-    return "live";
+    return MediaKind.LIVE;
   }
 
   // Series indicators
@@ -240,17 +240,17 @@ function classifyByUrl(entry: Entry): MediaKind | undefined {
     lower.includes("/seasons/") ||
     lower.includes("/episodes/")
   ) {
-    return "series";
+    return MediaKind.SERIES;
   }
 
   // Movie indicators
   if (lower.includes("/movie/") || lower.includes("/vod/")) {
-    return "movie";
+    return MediaKind.MOVIE;
   }
 
   // File extensions suggest VOD
   if (lower.match(/\.(mp4|mkv|avi|mov|wmv|flv)(\?|$)/)) {
-    return "movie";
+    return MediaKind.MOVIE;
   }
 
   return undefined;
@@ -279,19 +279,19 @@ function classifyByHls(
   if (strongVodSignal) {
     // Check if it's series based on path
     if (url.includes("/series/") || url.includes("/show/")) {
-      return "series";
+      return MediaKind.SERIES;
     }
-    return "movie";
+    return MediaKind.MOVIE;
   }
 
   // Conservative mode: treat HLS as live unless strong VOD signals
   if (conservative) {
     // If has EPG ID, very likely live
     if (entry.tvg?.id) {
-      return "live";
+      return MediaKind.LIVE;
     }
     // Default HLS to live
-    return "live";
+    return MediaKind.LIVE;
   }
 
   return undefined;
@@ -303,16 +303,16 @@ function classifyByHls(
 function classifyByFallback(entry: Entry): MediaKind | undefined {
   // Catchup/timeshift attributes suggest live TV
   if (entry.attrs.catchup || entry.attrs.timeshift) {
-    return "live";
+    return MediaKind.LIVE;
   }
 
   // EPG ID strongly suggests live channel
   if (entry.tvg?.id) {
-    return "live";
+    return MediaKind.LIVE;
   }
 
   // Default to live (most common for IPTV)
-  return "live";
+  return MediaKind.LIVE;
 }
 
 /**
@@ -356,10 +356,10 @@ export function getKindStatistics(entries: Entry[]): Record<
   number
 > {
   const stats: Record<MediaKind | "unknown", number> = {
-    live: 0,
-    movie: 0,
-    series: 0,
-    radio: 0,
+    [MediaKind.LIVE]: 0,
+    [MediaKind.MOVIE]: 0,
+    [MediaKind.SERIES]: 0,
+    [MediaKind.RADIO]: 0,
     unknown: 0,
   };
 
