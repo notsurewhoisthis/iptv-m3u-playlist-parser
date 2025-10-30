@@ -57,7 +57,23 @@ function parseExtInf(line: string) {
   // #EXTINF:-1 tvg-id=\"...\" group-title=\"...\",Channel Name
   const afterPrefix = line.slice(EXTINF.length).trim();
   // Split into "duration [attrs],name"
-  const commaIdx = afterPrefix.indexOf(",");
+  // Find the comma that separates attributes from name (must be outside quotes)
+  let commaIdx = -1;
+  let inQuote = false;
+  let quoteChar = '';
+  for (let i = 0; i < afterPrefix.length; i++) {
+    const ch = afterPrefix[i];
+    if (!inQuote && (ch === '"' || ch === "'")) {
+      inQuote = true;
+      quoteChar = ch;
+    } else if (inQuote && ch === quoteChar) {
+      inQuote = false;
+      quoteChar = '';
+    } else if (!inQuote && ch === ',') {
+      commaIdx = i;
+      break;
+    }
+  }
   const left = commaIdx >= 0 ? afterPrefix.slice(0, commaIdx) : afterPrefix;
   const name = commaIdx >= 0 ? afterPrefix.slice(commaIdx + 1).trim() : "";
 
@@ -76,7 +92,33 @@ function parseExtInf(line: string) {
     attrsPart = left;
   }
   const attrs = parseKeyValueAttrs(attrsPart);
-  return { duration, attrs, name: trimQuotes(name) };
+
+  // Parse typed fields from attributes
+  let streamType: Entry['streamType'];
+  const tvgType = attrs['tvg-type']?.toLowerCase();
+  if (tvgType === 'live') streamType = 'live';
+  else if (tvgType === 'vod' || tvgType === 'movie' || tvgType === 'video') streamType = 'vod';
+  else if (tvgType === 'series') streamType = 'series';
+  else if (tvgType === 'radio') streamType = 'radio';
+
+  const audioTrack = attrs['audio-track'] || undefined;
+  const aspectRatio = attrs['aspect-ratio'] || undefined;
+
+  const adultVal = attrs['adult'];
+  const isAdult = adultVal === '1' || adultVal?.toLowerCase() === 'true' ? true : undefined;
+  const recVal = attrs['tvg-rec'];
+  const recording = recVal === '1' || recVal?.toLowerCase() === 'true' ? true : undefined;
+
+  return {
+    duration,
+    attrs,
+    name: trimQuotes(name),
+    streamType,
+    audioTrack,
+    aspectRatio,
+    isAdult,
+    recording,
+  };
 }
 
 function normalizeEntryAttrs(attrs: Record<string, string>) {
@@ -104,6 +146,40 @@ function normalizeEntryAttrs(attrs: Record<string, string>) {
   return out;
 }
 
+/**
+ * Parse URLs with pipe-separated headers: http://url|Header1=Value1&Header2=Value2
+ */
+function parseUrlWithPipeParams(rawUrl: string): { url: string; headers?: Record<string, string> } {
+  const pipeIdx = rawUrl.indexOf('|');
+  if (pipeIdx === -1) {
+    return { url: rawUrl };
+  }
+
+  const url = rawUrl.slice(0, pipeIdx).trim();
+  const paramsStr = rawUrl.slice(pipeIdx + 1).trim();
+
+  if (!paramsStr) {
+    return { url };
+  }
+
+  const headers: Record<string, string> = {};
+  for (const param of paramsStr.split('&')) {
+    const eqIdx = param.indexOf('=');
+    if (eqIdx > 0) {
+      const key = param.slice(0, eqIdx).trim();
+      const value = param.slice(eqIdx + 1).trim();
+      if (key && value) {
+        headers[key] = value;
+      }
+    }
+  }
+
+  return {
+    url,
+    headers: Object.keys(headers).length > 0 ? headers : undefined
+  };
+}
+
 export function parsePlaylist(text: string): Playlist {
   const warnings: string[] = [];
   const items: Entry[] = [];
@@ -129,7 +205,7 @@ export function parsePlaylist(text: string): Playlist {
     }
 
     if (line.toUpperCase().startsWith(EXTINF)) {
-      const { duration, attrs: rawAttrs, name } = parseExtInf(lines[i]);
+      const { duration, attrs: rawAttrs, name, streamType, audioTrack, aspectRatio, isAdult, recording } = parseExtInf(lines[i]);
       const attrs = normalizeEntryAttrs(rawAttrs);
       const group: string[] = [];
       const tvg = {
@@ -210,7 +286,15 @@ export function parsePlaylist(text: string): Playlist {
           continue;
         }
         // First non-comment line after EXTINF is the URL
-        url = lraw.trim();
+        const { url: parsedUrl, headers: pipeHeaders } = parseUrlWithPipeParams(lraw.trim());
+        url = parsedUrl;
+
+        // Merge pipe headers into httpHeaders
+        if (pipeHeaders) {
+          httpHeaders ||= { headers: {} };
+          httpHeaders.headers ||= {};
+          Object.assign(httpHeaders.headers, pipeHeaders);
+        }
         break;
       }
 
@@ -229,6 +313,11 @@ export function parsePlaylist(text: string): Playlist {
         http: httpHeaders,
         kodiProps,
         attrs,
+        streamType,
+        audioTrack,
+        aspectRatio,
+        isAdult,
+        recording,
       };
       items.push(entry);
       i = j + 1;

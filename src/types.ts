@@ -70,6 +70,47 @@ export interface ValidationResult {
   errors?: string[];
 }
 
+/**
+ * Stream health status from validation checks
+ */
+export interface StreamHealth {
+  alive: boolean;
+  statusCode?: number;
+  latency?: number;
+  error?: string;
+  checkedAt?: Date;
+}
+
+/**
+ * Options for playlist stream validation
+ */
+export interface ValidationOptions {
+  /** Request timeout in milliseconds (default: 5000) */
+  timeout?: number;
+  /** HTTP method to use for validation (default: HEAD) */
+  method?: "HEAD" | "GET";
+  /** Number of retries on failure (default: 0) */
+  retries?: number;
+  /** Concurrent validation requests (default: 10) */
+  concurrency?: number;
+  /** Progress callback */
+  onProgress?: (completed: number, total: number) => void;
+}
+
+/**
+ * Catchup TV configuration for time-shifted playback
+ */
+export interface CatchupInfo {
+  /** Catchup type: "default" | "append" | "shift" | "flussonic" | custom */
+  type: string;
+  /** URL template with placeholders: {duration}, {offset}, {utc}, {timestamp} */
+  source?: string;
+  /** Catchup availability in days */
+  days?: number;
+  /** Catchup availability in hours */
+  hours?: number;
+}
+
 export interface PlaylistHeader {
   tvgUrls: string[];
   tvgShift?: number; // minutes
@@ -105,12 +146,66 @@ export interface Entry {
   series?: SeriesInfo;
   /** Original position in playlist (useful for multi-source merging) */
   providerOrder?: number;
+  /** Stream health status (populated via validatePlaylist) */
+  health?: StreamHealth;
+  /** Catchup TV configuration */
+  catchup?: CatchupInfo;
+  /** EPG programs (populated via linkEpgData) */
+  epg?: EpgProgram[];
+  /** Stream type (parsed from tvg-type attribute) */
+  streamType?: 'live' | 'vod' | 'series' | 'radio';
+  /** Audio track languages (parsed from audio-track attribute) */
+  audioTrack?: string;
+  /** Aspect ratio (parsed from aspect-ratio attribute) */
+  aspectRatio?: string;
+  /** Adult content flag (parsed from adult attribute) */
+  isAdult?: boolean;
+  /** Recording allowed (parsed from tvg-rec attribute) */
+  recording?: boolean;
 }
 
 export interface Playlist {
   header: PlaylistHeader;
   items: Entry[];
   warnings: string[];
+}
+
+/**
+ * EPG program data for a channel
+ */
+export interface EpgProgram {
+  channel: string;
+  title: string;
+  start: Date;
+  stop: Date;
+  description?: string;
+  category?: string[];
+  icon?: string;
+}
+
+/**
+ * EPG coverage statistics for a playlist
+ */
+export interface EpgCoverage {
+  totalEntries: number;
+  withEpgId: number;
+  withEpgData: number;
+  coveragePercent: number;
+  missingEpgIds: string[];
+}
+
+/**
+ * Options for playlist generation/serialization
+ */
+export interface GeneratorOptions {
+  /** Output format (default: m3u8) */
+  format?: "m3u" | "m3u8";
+  /** Pretty-print with indentation (default: false) */
+  indent?: boolean;
+  /** Sort entries by group before output (default: false) */
+  sortByGroup?: boolean;
+  /** Include #EXTM3U header (default: true) */
+  includeHeader?: boolean;
 }
 
 export interface XtreamCredentials {

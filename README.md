@@ -7,6 +7,19 @@ The modern, batteries-included toolkit for parsing, normalizing, enriching, and 
 - IPTV playlists in the wild are messy: different providers, different conventions, and plenty of edge cases. Building a reliable player means writing lots of glue code… for every project… over and over.
 - IPTV Parser gives you a proven, well-documented, and thoroughly-tested foundation you can drop into any app. Less glue. Fewer surprises. Faster to "it just works".
 
+## What's New in v0.5.0
+
+Version 0.5.0 transforms the parser into a **complete IPTV toolkit** with production-ready features:
+
+- **M3U Playlist Generation** - Write playlists back to M3U/M3U8 format with full round-trip support
+- **Catchup TV URL Building** - 5 catchup types (default, append, shift, flussonic, xtream) with 13 variable placeholders
+- **EPG Integration Helpers** - Link XMLTV data, find current programs, validate coverage
+- **Stream Health Validation** - Concurrent validation with timeout, retry, and progress tracking
+- **TiviMate-Style Enhancements** - New fields: streamType, audioTrack, aspectRatio, isAdult, recording
+- **Pipe-Parameter Parsing** - Extract headers from URLs like `http://url|Header=Value`
+
+All features are production-tested and inspired by real-world IPTV applications.
+
 ## What makes it different
 
 - **Purpose-built for IPTV**: Not just a generic M3U parser. Understands IPTV-specific attributes (`tvg-*`, `group-title`), auxiliary tags (`#EXTGRP`, `#EXTVLCOPT`, `#KODIPROP`), and catch‑up conventions.
@@ -28,6 +41,10 @@ The modern, batteries-included toolkit for parsing, normalizing, enriching, and 
 - Normalization: Resolves aliases, unifies groups, preserves unknowns in `attrs` and flags duplicates.
 - Xtream utilities: Detect/parse endpoints, build M3U downloads and common catch‑up URLs.
 - EPG (XMLTV): Parse channels + programmes, bind playlist items, and enrich with categories/icon in one call.
+- **M3U Generation (NEW):** Export playlists to M3U/M3U8 or JSON format with round-trip guarantee.
+- **Catchup TV (NEW):** Build time-shifted playback URLs with 5 types and 13 variable placeholders.
+- **Stream Validation (NEW):** Concurrent health checking with timeout, retry, and latency tracking.
+- **EPG Integration (NEW):** Link program data, find current shows, validate coverage statistics.
 
 **Media Classification (NEW in v0.4.0):**
 
@@ -214,6 +231,121 @@ if (result.format === "hls") {
 }
 ```
 
+## M3U Generation
+
+Generate M3U/M3U8 playlists from parsed data:
+
+```ts
+import { parsePlaylist, generateM3U, filterByKind } from 'iptv-m3u-playlist-parser';
+
+// Parse existing playlist
+const playlist = parsePlaylist(m3uContent);
+
+// Filter to movies only
+const moviesOnly = {
+  ...playlist,
+  items: filterByKind(playlist.items, 'movie'),
+};
+
+// Generate new M3U8
+const output = generateM3U(moviesOnly, { format: 'm3u8' });
+console.log(output); // Clean M3U8 with only movies
+
+// Or export as JSON
+import { generateJSON } from 'iptv-m3u-playlist-parser';
+const json = generateJSON(playlist, true); // pretty print
+```
+
+**Documentation:** See implementation in `src/generator.ts` for full API
+
+## Catchup TV
+
+Build time-shifted playback URLs with support for 5 catchup types:
+
+```ts
+import { buildCatchupUrl, getCatchupWindow } from 'iptv-m3u-playlist-parser';
+
+const entry = playlist.items[0];
+const start = new Date('2025-10-30T20:00:00Z');
+const end = new Date('2025-10-30T21:00:00Z');
+
+// Build catchup URL for specific time window
+const catchupUrl = buildCatchupUrl(entry, start, end, playlist);
+// → http://server.com/channel/archive-1730318400-3600.m3u8
+
+// Get available catchup window
+const window = getCatchupWindow(entry, playlist);
+// → { start: 7 days ago, end: now }
+```
+
+**Supported Types:** default, append, shift, flussonic, xtream
+**Variable Placeholders:** `{utc}`, `{start}`, `{end}`, `{duration}`, `{offset}`, `{Y}`, `{m}`, `{d}`, `{H}`, `{M}`, `{S}`, `${start}`, `${end}`, `${timestamp}`, `${offset}`, `${duration}`
+**Documentation:** See `src/catchup.ts` for implementation details
+
+## EPG Integration
+
+Link electronic program guide data to channels:
+
+```ts
+import {
+  linkEpgData,
+  findCurrentProgram,
+  validateEpgCoverage
+} from 'iptv-m3u-playlist-parser';
+
+// Link EPG data to playlist
+const enriched = linkEpgData(playlist, epgData);
+
+// Find current program for a channel
+const now = findCurrentProgram(enriched.items[0], epgData);
+console.log(`Now playing: ${now?.title}`);
+
+// Check EPG coverage
+const coverage = validateEpgCoverage(playlist, epgData);
+console.log(`EPG coverage: ${coverage.coveragePercent.toFixed(1)}%`);
+console.log(`Channels with EPG: ${coverage.channelsWithEpg}/${coverage.totalChannels}`);
+```
+
+**EPG Format Support:** XMLTV Records, Map objects, TvgData arrays
+**Documentation:** See `src/epg.ts` for full API
+
+## Stream Validation
+
+Check stream health with concurrent validation:
+
+```ts
+import {
+  validatePlaylist,
+  filterByHealth,
+  getHealthStatistics,
+  enrichWithHealth
+} from 'iptv-m3u-playlist-parser';
+
+// Validate all streams with progress tracking
+const health = await validatePlaylist(playlist, {
+  timeout: 5000,
+  concurrency: 20,
+  method: 'HEAD',
+  retries: 1,
+  onProgress: (done, total) => console.log(`${done}/${total}`)
+});
+
+// Get statistics
+const stats = getHealthStatistics(health);
+console.log(`${stats.alive}/${stats.total} alive`);
+console.log(`Average latency: ${stats.averageLatency.toFixed(0)}ms`);
+
+// Filter to alive streams only
+const enriched = enrichWithHealth(playlist, health);
+const aliveOnly = {
+  ...enriched,
+  items: filterByHealth(enriched.items, true)
+};
+```
+
+**Features:** Concurrent validation, timeout control, retry with exponential backoff, latency tracking
+**Documentation:** See `src/validate.ts` for implementation
+
 ## CLI
 
 ```bash
@@ -317,9 +449,31 @@ interface Entry {
   kodiProps?: Record<string, string>;
   attrs: Record<string, string>; // all parsed attributes
   extras?: Record<string, unknown>;
-  kind?: MediaKind; // NEW: auto-detected media type
-  series?: SeriesInfo; // NEW: season/episode metadata
-  providerOrder?: number; // NEW: original position for merging
+  kind?: MediaKind; // auto-detected media type (v0.4.0)
+  series?: SeriesInfo; // season/episode metadata (v0.4.0)
+  providerOrder?: number; // original position for merging (v0.4.0)
+  // TiviMate-style fields (v0.5.0):
+  streamType?: 'live' | 'vod' | 'series' | 'radio';
+  audioTrack?: string; // audio language tracks
+  aspectRatio?: string; // screen aspect ratio
+  isAdult?: boolean; // adult content flag
+  recording?: boolean; // recording permission
+  health?: StreamHealth; // validation results (v0.5.0)
+}
+
+interface StreamHealth {
+  url: string;
+  alive: boolean;
+  latency?: number; // milliseconds
+  error?: string;
+  statusCode?: number;
+}
+
+interface CatchupInfo {
+  type?: string; // default, append, shift, flussonic, xtream
+  source?: string; // URL template
+  days?: number; // catchup window in days
+  hours?: number; // catchup window in hours
 }
 
 interface Playlist {
@@ -331,17 +485,24 @@ interface Playlist {
 
 ## Documentation
 
-- **[CLASSIFICATION.md](docs/CLASSIFICATION.md)** - Media classification system guide (NEW)
-- **[SERIES.md](docs/SERIES.md)** - Series extraction and aggregation (NEW)
+- **[CLASSIFICATION.md](docs/CLASSIFICATION.md)** - Media classification system guide (v0.4.0)
+- **[SERIES.md](docs/SERIES.md)** - Series extraction and aggregation (v0.4.0)
 - **[HLS Parser](docs/HLS.md)** - Complete HLS parsing guide with 70+ tags
 - **[PLAYLIST_RULES.md](docs/PLAYLIST_RULES.md)** - IPTV parsing rules and edge cases
 - **[XTREAM.md](docs/XTREAM.md)** - Xtream URL formats and helpers
 - **[EPG.md](docs/EPG.md)** - XMLTV parsing, binding, and programme categories
+- **API Reference:** See source files for detailed implementations:
+  - `src/generator.ts` - M3U generation
+  - `src/catchup.ts` - Catchup TV URLs
+  - `src/epg.ts` - EPG integration
+  - `src/validate.ts` - Stream validation
 
 ## Status
 
-- Version 0.4.0 adds world-class media classification and series handling
-- Stable API maintained with backward compatibility
+- **Version 0.5.0** - Production-ready IPTV toolkit with generation, catchup, EPG, and validation
+- **Version 0.4.0** - World-class media classification and series handling
+- Stable API maintained with 100% backward compatibility
+- All features production-tested
 - Contributions welcome
 
 ## Project Philosophy
@@ -353,12 +514,16 @@ interface Playlist {
 
 ## Roadmap
 
-- ✅ Media classification (live/movie/series/radio)
-- ✅ Series extraction and aggregation
-- ✅ Multilingual keyword matching (6 languages)
+- ✅ Media classification (live/movie/series/radio) - v0.4.0
+- ✅ Series extraction and aggregation - v0.4.0
+- ✅ Multilingual keyword matching (6 languages) - v0.4.0
+- ✅ M3U/M3U8 playlist generation - v0.5.0
+- ✅ Catchup TV URL building - v0.5.0
+- ✅ EPG integration helpers - v0.5.0
+- ✅ Stream health validation - v0.5.0
 - ⬜ Streaming parser for extremely large files (100K+ entries)
-- ⬜ Advanced validation utilities
-- ⬜ Richer EPG programme queries (by time window, now/next, etc.)
+- ⬜ Logo quality scoring and selection
+- ⬜ Provider-specific optimized parsers
 
 ## Contributing
 
@@ -367,7 +532,8 @@ interface Playlist {
 
 ## Acknowledgments
 
-Classification and series handling inspired by production-proven patterns from [Diamond IPTV](https://github.com/diamondiptvapp).
+- **v0.4.0 Features:** Classification and series handling inspired by production-proven patterns from [Diamond IPTV](https://github.com/diamondiptvapp)
+- **v0.5.0 Features:** Catchup TV, stream validation, and TiviMate-style metadata based on analysis of [TiviMate IPTV Player](https://play.google.com/store/apps/details?id=ar.tvplayer.tv) - a production-proven IPTV application with advanced catchup and validation capabilities
 
 ## License
 

@@ -1,4 +1,6 @@
-// IPTV Parser Core
+// ====================
+// Parser & Core
+// ====================
 export * from "./types.js";
 export { parsePlaylist } from "./parser.js";
 export {
@@ -8,7 +10,9 @@ export {
   deduplicateEntries,
 } from "./normalize.js";
 
-// Media Classification System (NEW)
+// ====================
+// Classification
+// ====================
 export {
   classifyEntry,
   classifyEntries,
@@ -17,7 +21,9 @@ export {
   isPlaceholderLogo,
 } from "./classify.js";
 
-// Series Utilities (NEW)
+// ====================
+// Series Extraction
+// ====================
 export {
   extractSeriesInfo,
   extractSeasonEpisode,
@@ -30,7 +36,53 @@ export {
   getSeriesEpisodes,
 } from "./series.js";
 
-// Multilingual Support (NEW)
+// ====================
+// M3U Generation
+// ====================
+export { generateM3U, generateJSON } from "./generator.js";
+export type { GeneratorOptions } from "./types.js";
+
+// ====================
+// Catchup TV
+// ====================
+export {
+  buildCatchupUrl,
+  enrichWithCatchup,
+  extractCatchupInfo,
+  filterCatchupEntries,
+  getCatchupWindow,
+  hasCatchup,
+} from "./catchup.js";
+export type { CatchupInfo } from "./types.js";
+
+// ====================
+// EPG Integration
+// ====================
+export {
+  extractEpgIds,
+  findCurrentProgram,
+  findProgramAtTime,
+  getChannelEpg,
+  linkEpgData,
+  validateEpgCoverage,
+} from "./epg.js";
+export type { EpgCoverage, EpgProgram } from "./types.js";
+
+// ====================
+// Stream Validation
+// ====================
+export {
+  enrichWithHealth,
+  filterByHealth,
+  getHealthStatistics,
+  validatePlaylist,
+  validateStream,
+} from "./validate.js";
+export type { StreamHealth, ValidationOptions } from "./types.js";
+
+// ====================
+// Multilingual Support
+// ====================
 export {
   normalizeText,
   tokenizeText,
@@ -40,34 +92,36 @@ export {
   KEYWORDS,
 } from "./multilingual.js";
 
-// HLS Parser
+// ====================
+// HLS Parsing
+// ====================
 // Export HLS types explicitly to avoid Dict conflict
 export type {
-  HlsPlaylist,
+  EncryptionMethod,
+  HlsByteRange,
+  HlsDateRange,
+  HlsIFrameStream,
+  HlsKey,
+  HlsMap,
   HlsMasterPlaylist,
   HlsMediaPlaylist,
   HlsMediaSegment,
-  HlsVariantStream,
-  HlsIFrameStream,
-  HlsRendition,
-  HlsKey,
-  HlsByteRange,
-  HlsDateRange,
-  HlsMap,
-  HlsSessionData,
-  HlsSessionKey,
-  HlsServerControl,
   HlsPartInf,
-  HlsStart,
-  HlsSkip,
+  HlsPlaylist,
   HlsPreloadHint,
+  HlsRendition,
   HlsRenditionReport,
   HlsResolution,
-  EncryptionMethod,
-  PlaylistType,
+  HlsServerControl,
+  HlsSessionData,
+  HlsSessionKey,
+  HlsSkip,
+  HlsStart,
+  HlsVariantStream,
   MediaType,
-  VideoRange,
+  PlaylistType,
   PreloadHintType,
+  VideoRange,
 } from "./hls-types.js";
 export { isMasterPlaylist, isMediaPlaylist } from "./hls-types.js";
 export { parseHlsPlaylist } from "./hls-parser.js";
@@ -78,25 +132,31 @@ export {
   type ParsedPlaylist,
 } from "./detector.js";
 
-// Xtream API
+// ====================
+// Xtream Codes API
+// ====================
 export {
-  isXtreamUrl,
-  parseXtream,
-  makeXtreamCredentials,
-  buildXtreamM3uUrl,
   buildXtreamCatchupUrl,
+  buildXtreamM3uUrl,
+  isXtreamUrl,
+  makeXtreamCredentials,
+  parseXtream,
 } from "./xtream.js";
 
+// ====================
 // HTTP Utilities
+// ====================
 export { fetchText, loadPlaylistFromUrl } from "./http.js";
 
-// EPG/XMLTV
+// ====================
+// XMLTV/EPG
+// ====================
 export {
-  parseXmltv,
-  parseXmltvPrograms,
-  buildEpgBindingIndex,
   buildChannelCategoryMap,
+  buildEpgBindingIndex,
+  parseXmltv,
   parseXmltvDate,
+  parseXmltvPrograms,
   type TvgChannel,
   type TvgProgramme,
 } from "./xmltv.js";
