@@ -1,9 +1,46 @@
-// IPTV Parser (existing)
+// IPTV Parser Core
 export * from "./types.js";
 export { parsePlaylist } from "./parser.js";
-export { normalizeEntry, normalizePlaylist } from "./normalize.js";
+export {
+  normalizeEntry,
+  normalizePlaylist,
+  mergePlaylists,
+  deduplicateEntries,
+} from "./normalize.js";
 
-// HLS Parser (new in v0.3.0)
+// Media Classification System (NEW)
+export {
+  classifyEntry,
+  classifyEntries,
+  filterByKind,
+  getKindStatistics,
+  isPlaceholderLogo,
+} from "./classify.js";
+
+// Series Utilities (NEW)
+export {
+  extractSeriesInfo,
+  extractSeasonEpisode,
+  sanitizeSeriesName,
+  aggregateSeries,
+  enrichWithSeriesInfo,
+  isSeriesEntry,
+  filterSeriesEntries,
+  getSeriesNames,
+  getSeriesEpisodes,
+} from "./series.js";
+
+// Multilingual Support (NEW)
+export {
+  normalizeText,
+  tokenizeText,
+  getKeywords,
+  containsKeywords,
+  countKeywordMatches,
+  KEYWORDS,
+} from "./multilingual.js";
+
+// HLS Parser
 // Export HLS types explicitly to avoid Dict conflict
 export type {
   HlsPlaylist,
